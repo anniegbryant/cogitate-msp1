@@ -27,9 +27,7 @@ from pyprep.prep_pipeline import PrepPipeline
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import bids_root
-
-def find_bad_eeg(subject_id, visit_id, record="run", has_eeg=False):
+def find_bad_eeg(subject_id, visit_id, bids_root, record="run", has_eeg=False):
     
     # Check whether there are EEG data for this participant and stop if not    
     if not has_eeg:

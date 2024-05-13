@@ -11,15 +11,6 @@ Configurate the parameters of the study.
 import os
 
 # =============================================================================
-# BIDS SETTINGS
-# =============================================================================
-# if os.getlogin() in ['oscfe', 'ferranto', 'FerrantO']:  #TODO: doesn't work on the HPC
-#     bids_root = r'Z:\_bids_'
-# else:
-bids_root = r'Z:\_bids_'
-
-
-# =============================================================================
 # MAXWELL FILTERING SETTINGS
 # =============================================================================
 

@@ -27,10 +27,7 @@ import mne_bids
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import bids_root
-
-
-def run_maxwell_filter(subject_id, visit_id, record="run"):
+def run_maxwell_filter(subject_id, visit_id, bids_root, record="run"):
     
     # Prepare PDF report
     pdf = FPDF(orientation="P", unit="mm", format="A4")
@@ -59,13 +56,16 @@ def run_maxwell_filter(subject_id, visit_id, record="run"):
     
     # Loop over runs
     data_path = os.path.join(bids_root,f"sub-{subject_id}",f"ses-{visit_id}","meg")
+    print("BIDS root:" + str(bids_root))
+    print("Data path:" + str(data_path))
     
     for fname in sorted(os.listdir(data_path)):
         if fname.endswith(".json") and record in fname:
             
             # Set run
             if "run" in fname:
-                run = f"{int(fname[-10]):02}"
+                print("Filename: " + str(fname))
+                run = fname.split("run-")[1].split("_")[0]
             elif "rest" in fname:
                 run = None
             print("  Run: %s" % run)

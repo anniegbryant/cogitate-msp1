@@ -41,7 +41,7 @@ parser.add_argument('--bids_root',
                     type=str,
                     default='/mnt/beegfs/XNAT/COGITATE/MEG/phase_2/processed/bids',
                     help='Path to the BIDS root directory')
-parser.add_argument('--fs_path',
+parser.add_argument('--subjects_dir',
                     type=str,
                     default='/mnt/beegfs/XNAT/COGITATE/MEG/phase_2/processed/bids/derivatives/fs',
                     help='Path to the FreeSurfer directory')
@@ -61,7 +61,7 @@ subject = "sub-"+opt.sub
 visit = opt.visit
 space = opt.space
 
-subjects_dir = opt.fs_path
+subjects_dir = opt.subjects_dir
 fname_coreg = op.join(opt.coreg_path, subject, "ses-"+visit, "meg")
 
 fpath_fw = op.join(opt.out_fw, subject, "ses-"+visit, "meg")
@@ -140,7 +140,7 @@ def make_forward_model(src, task):
     
     # Set transformation matrix and bem pathes
     trans = op.join(fname_coreg, subject+"_ses-"+visit+"_trans.fif")
-    bem = op.join(subjects_dir, subject, subject+"_ses-V1_bem-sol.fif") #BEM is shared between sessions
+    bem = op.join(subjects_dir, subject, f"{subject}_ses-{visit}_bem-sol.fif") #BEM is shared between sessions
     
     # Calculate forward solution for MEG channels
     fwd = mne.make_forward_solution(fname_raw, 
@@ -166,8 +166,8 @@ def make_forward_model(src, task):
 # RUN
 if __name__ == "__main__":
     src = make_source_space(space)
-    if visit == 'V1':
+    if visit in [1, "1", "01"]:
         make_forward_model(src, 'dur')
-    elif visit == 'V2':
+    elif visit in [2, "2", "02"]:
         make_forward_model(src, 'vg')
         make_forward_model(src, 'replay')

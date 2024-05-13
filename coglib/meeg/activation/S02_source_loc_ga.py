@@ -22,9 +22,6 @@ import mne_bids
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import bids_root
-
-
 parser=argparse.ArgumentParser()
 parser.add_argument('--method',
                     type=str,
@@ -34,20 +31,23 @@ parser.add_argument('--band',
                     type=str,
                     default='gamma',
                     help='frequency band of interest ("alpha", "beta", "gamma")')
-# parser.add_argument('--bids_root',
-#                     type=str,
-#                     default='/mnt/beegfs/XNAT/COGITATE/MEG/phase_2/processed/bids',
-#                     help='Path to the BIDS root directory')
+parser.add_argument('--visit',
+                    type=str,
+                    default='V2',
+                    help='visit_id (e.g. "V1")')
+parser.add_argument('--bids_root',
+                    type=str,
+                    default='/data/MEG_data/BIDS',
+                    help='BIDS root directory')
 opt=parser.parse_args()
-
 
 # Set params
 inv_method = opt.method
 fr_band = opt.band
-visit_id = "V1"
+visit_id = opt.visit
+bids_root = opt.bids_root
 
 debug = False
-
 
 # Set participant list
 phase = 3
@@ -83,9 +83,9 @@ def source_loc_ga():
         fname_end = "lh"
     
     # Set task
-    if visit_id == "V1":
+    if visit_id in [1, "1", "01"]:
         bids_task = 'dur'
-    elif visit_id == "V2":
+    elif visit_id in [2, "2", "02"]:
         bids_task = 'vg'
     # elif visit_id == "V2":  #find a better way to set the task in V2
     #     bids_task = 'replay'

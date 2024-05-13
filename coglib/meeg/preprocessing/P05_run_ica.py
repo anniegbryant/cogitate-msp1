@@ -22,10 +22,7 @@ import mne_bids
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import bids_root
-
-
-def run_ica(subject_id, visit_id, has_eeg=False):
+def run_ica(subject_id, visit_id, bids_root, has_eeg=False):
     
     # Set path to preprocessing derivatives
     prep_deriv_root = op.join(bids_root, "derivatives", "preprocessing")
@@ -43,12 +40,15 @@ def run_ica(subject_id, visit_id, has_eeg=False):
     
     # Loop over runs
     data_path = os.path.join(bids_root,f"sub-{subject_id}",f"ses-{visit_id}","meg")
+
+    # Initialize raw_all list
+    # raw_all = []
     
     for fname in sorted(os.listdir(data_path)):
         if fname.endswith(".json") and "run" in fname:
             
             # Set run
-            run = int(fname[-10])
+            run = fname.split("run-")[1].split("_")[0]
             print("  Run: %s" % run)
         
             # Set task
@@ -67,7 +67,7 @@ def run_ica(subject_id, visit_id, has_eeg=False):
                 subject=subject_id,  
                 datatype='meg',  
                 task=bids_task,
-                run=f"{run:02}",
+                run=run,
                 session=visit_id, 
                 suffix='annot', 
                 extension='.fif',
@@ -84,7 +84,7 @@ def run_ica(subject_id, visit_id, has_eeg=False):
             raw.resample(200)
             
             # Concatenate raw copies
-            if run == 1:
+            if run in [1, "1", "01"]:
                 raw_all = mne.io.concatenate_raws([raw])
             else:
                 raw_all = mne.io.concatenate_raws([raw_all, raw])

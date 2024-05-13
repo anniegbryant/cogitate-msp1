@@ -22,9 +22,8 @@ import mne_bids
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import bids_root
 
-def artifact_annotation(subject_id, visit_id, record="run", has_eeg=False, threshold_muscle=7):
+def artifact_annotation(subject_id, visit_id, bids_root, record="run", has_eeg=False, threshold_muscle=7):
     
     # Prepare PDF report
     pdf = FPDF(orientation="P", unit="mm", format="A4")
@@ -57,7 +56,7 @@ def artifact_annotation(subject_id, visit_id, record="run", has_eeg=False, thres
             
             # Set run
             if "run" in fname:
-                run = f"{int(fname[-10]):02}"
+                run = fname.split("run-")[1].split("_")[0]
             elif "rest" in fname:
                 run = None
             print("  Run: %s" % run)

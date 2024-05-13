@@ -22,10 +22,7 @@ import mne_bids
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import bids_root
-
-
-def apply_ica(subject_id, visit_id, record="run", has_eeg=False):
+def apply_ica(subject_id, visit_id, bids_root, record="run", has_eeg=False):
     
     # Prepare PDF report
     pdf = FPDF(orientation="P", unit="mm", format="A4")
@@ -43,24 +40,19 @@ def apply_ica(subject_id, visit_id, record="run", has_eeg=False):
                              "codes")
     
     # Read what component to reject from the JSON file
-    with open(op.join(prep_deriv_root, 'P05_rej_comp.json'), 'r') as openfile:
-        rej_comp_json = json.load(openfile)
-    
-    # # Compute mean (and sd) number of rejected components
-    # ica = []
-    # for key, value in rej_comp_json.items():
-    #     ica.append(value['V1']['meg_ica_eog'] + value['V1']['meg_ica_ecg'])
-    # count = []
-    # for i in ica:
-    #     count.append(len(i))
-    # import numpy as np
-    # print(np.mean(count))
-    # print(np.std(count))
-    
-    meg_ica_eog = rej_comp_json[subject_id][visit_id].get('meg_ica_eog')
-    meg_ica_ecg = rej_comp_json[subject_id][visit_id].get('meg_ica_ecg')
-    eeg_ica_eog = rej_comp_json[subject_id][visit_id].get('eeg_ica_eog')
-    eeg_ica_ecg = rej_comp_json[subject_id][visit_id].get('eeg_ica_ecg')
+    if os.path.isfile(op.join(prep_deriv_root, 'P05_rej_comp.json')):
+        with open(op.join(prep_deriv_root, 'P05_rej_comp.json'), 'r') as openfile:
+            rej_comp_json = json.load(openfile)
+        
+        meg_ica_eog = rej_comp_json[subject_id][visit_id].get('meg_ica_eog')
+        meg_ica_ecg = rej_comp_json[subject_id][visit_id].get('meg_ica_ecg')
+        eeg_ica_eog = rej_comp_json[subject_id][visit_id].get('eeg_ica_eog')
+        eeg_ica_ecg = rej_comp_json[subject_id][visit_id].get('eeg_ica_ecg')
+    else:
+        meg_ica_eog = []
+        meg_ica_ecg = []
+        eeg_ica_eog = []
+        eeg_ica_ecg = []
         
     if meg_ica_eog + meg_ica_ecg != []:
         # Read ICA mixing matrices
@@ -103,7 +95,7 @@ def apply_ica(subject_id, visit_id, record="run", has_eeg=False):
             
             # Set run
             if "run" in fname:
-                run = f"{int(fname[-10]):02}"
+                run = fname.split("run-")[1].split("_")[0]
             elif "rest" in fname:
                 run = None
             print("  Run: %s" % run)

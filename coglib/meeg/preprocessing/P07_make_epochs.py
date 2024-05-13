@@ -25,10 +25,7 @@ from autoreject import get_rejection_threshold
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import (bids_root, tmin, tmax)
-
-
-def run_epochs(subject_id, visit_id, task, has_eeg=False):
+def run_epochs(subject_id, visit_id, task, bids_root, has_eeg=False):
     
     # Prepare PDF report
     pdf = FPDF(orientation="P", unit="mm", format="A4")
@@ -59,7 +56,7 @@ def run_epochs(subject_id, visit_id, task, has_eeg=False):
             if "run" in fname or "rest" in fname:
                 # Set run
                 if "run" in fname:
-                    run = f"{int(fname[-10]):02}"
+                    run = fname.split("run-")[1].split("_")[0]
                 elif "rest" in fname:
                     run = None
                 print("  Run: %s" % run)
@@ -137,13 +134,13 @@ def run_epochs(subject_id, visit_id, task, has_eeg=False):
     # Set trial-onset event_ids
     if task == "rest":
         events_id = {"rest": 1}
-    elif visit_id == 'V1':
+    elif visit_id == '1':
         events_id = {}
         types = ['face','object','letter','false']
         for j,t in enumerate(types):
             for i in range(1,21):
                 events_id[t+str(i)] = i + j * 20
-    elif visit_id == 'V2':
+    elif visit_id == '2':
         if task == "vg":
             events_id = {}
             events_id['blank'] = 50
@@ -176,7 +173,8 @@ def run_epochs(subject_id, visit_id, task, has_eeg=False):
     epochs = mne.Epochs(raw,
                         events, 
                         events_id,
-                        tmin, tmax,
+                        tmin=-0.5, 
+                        tmax=0.5, # Using the mne Epochs defaults here?
                         baseline=None,
                         proj=True,
                         picks=picks,

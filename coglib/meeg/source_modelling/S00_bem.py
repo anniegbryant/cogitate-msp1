@@ -21,6 +21,7 @@ import os.path as op
 import argparse
 
 import mne
+from mne import bem as mnebem
 
 
 parser=argparse.ArgumentParser()
@@ -36,7 +37,11 @@ parser.add_argument('--bids_root',
                     type=str,
                     default='/mnt/beegfs/XNAT/COGITATE/MEG/phase_2/processed/bids',
                     help='Path to the BIDS root directory')
-parser.add_argument('--fs_path',
+parser.add_argument('--fs_home',
+                    type=str,
+                    default='/mnt/beegfs/XNAT/COGITATE/MEG/phase_2/processed/bids/derivatives/fs',
+                    help='Path to the FreeSurfer directory')
+parser.add_argument('--subjects_dir',
                     type=str,
                     default='/mnt/beegfs/XNAT/COGITATE/MEG/phase_2/processed/bids/derivatives/fs',
                     help='Path to the FreeSurfer directory')
@@ -46,8 +51,10 @@ opt=parser.parse_args()
 # Set params
 subject = "sub-"+opt.sub
 visit = opt.visit
-subjects_dir = opt.fs_path
-if visit == "V1":
+subjects_dir = opt.subjects_dir
+FREESURFER_HOME = opt.fs_home
+
+if visit in [1, "1", "01"]:
     fname_raw = op.join(opt.bids_root, subject, "ses-"+visit, "meg", subject+"_ses-V1_task-dur_run-01_meg.fif")
 elif visit == "V2":
     fname_raw = op.join(opt.bids_root, subject, "ses-"+visit, "meg", subject+"_ses-V2_task-vg_run-01_meg.fif")  #TODO: to be tested
@@ -96,7 +103,7 @@ def make_scalp_surf():
     
     
     '''
-    mne.bem.make_scalp_surfaces(subject, 
+    mnebem.make_scalp_surfaces(subject, 
                                 subjects_dir=subjects_dir, 
                                 force=True, 
                                 overwrite=True, 
@@ -113,7 +120,7 @@ def make_bem():
     > mne watershed_bem --overwrite --subject ${file}
     
     '''
-    mne.bem.make_watershed_bem(subject, 
+    mnebem.make_watershed_bem(subject, 
                                subjects_dir=subjects_dir, 
                                overwrite=True, 
                                verbose=True)
@@ -226,6 +233,8 @@ if __name__ == "__main__":
     # viz_fs_recon()  #TODO: 3d plots don't work on the HPC
     make_scalp_surf()
     make_bem()
+
+    print("Getting BEM now")
     bem = get_bem()
     # coreg()
     

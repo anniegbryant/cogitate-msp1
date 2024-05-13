@@ -24,8 +24,6 @@ import mne_bids
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import bids_root
-
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--sub',
@@ -40,6 +38,11 @@ parser.add_argument('--method',
                     type=str,
                     default='dspm',
                     help='method used for the inverse solution ("lcmv", "dics", "dspm")')
+parser.add_argument('--bids_root',
+                    type=str,
+                    default='/data/MEG_data/BIDS',
+                    help='BIDS root directory')
+
 opt=parser.parse_args()
 
 
@@ -47,10 +50,10 @@ opt=parser.parse_args()
 subject_id = opt.sub
 visit_id = opt.visit
 inv_method = opt.method
+bids_root = opt.bids_root
 
 debug = True
 use_rs_noise = True
-
 
 def run_sourcerecon(subject_id, visit_id):
     # Set path to preprocessing derivatives and create the related folders
@@ -70,9 +73,9 @@ def run_sourcerecon(subject_id, visit_id):
     print("Processing subject: %s" % subject_id)
     
     # Set task
-    if visit_id == "V1":
+    if visit_id in [1, "1", "01"]:
         bids_task = 'dur'
-    elif visit_id == "V2":
+    elif visit_id in [2, "2", "02"]:
         bids_task = 'vg'
     # elif visit_id == "V2":  #find a better way to set the task in V2
     #     bids_task = 'replay'
@@ -95,7 +98,7 @@ def run_sourcerecon(subject_id, visit_id):
         preload=False)
     
     # Read resting-state data
-    if visit_id == "V2" and use_rs_noise:
+    if visit_id in [2, "2", "02"] and use_rs_noise:
         bids_path_rs = bids_path_epo.copy().update(
             task="rest",
             check=False)
@@ -105,20 +108,20 @@ def run_sourcerecon(subject_id, visit_id):
             preload=False)
     
     # Pick trials
-    if visit_id == "V1":
+    if visit_id in [1, "1", "01"]:
         epochs = epochs['Task_relevance in ["Relevant non-target", "Irrelevant"]']
     if debug:
         epochs = epochs[0:100]
     
     # Select sensor type
     epochs.load_data().pick('meg')
-    if visit_id == "V2" and use_rs_noise:
+    if visit_id in [2, "2", "02"] and use_rs_noise:
         epochs_rs.load_data().pick('meg')
     
     # Baseline correction
     baseline_win = (-0.5, 0.)
     active_win = (.0, .5)
-    if visit_id == "V1" or not use_rs_noise:
+    if visit_id in [1, "1", "01"] or not use_rs_noise:
         epochs.apply_baseline(baseline=baseline_win)
     
     # Compute rank
@@ -132,9 +135,9 @@ def run_sourcerecon(subject_id, visit_id):
     else:
         space = "volume"
         
-    if visit_id == "V1":
-        task = None
-    elif visit_id == "V2":
+    if visit_id in [1, "1", "01"]:
+        task = "dur"
+    elif visit_id in [2, "2", "02"]:
         task = "vg"
     
     bids_path_fwd = bids_path_epo.copy().update(
@@ -161,7 +164,7 @@ def run_sourcerecon(subject_id, visit_id):
             raise ValueError("Error: 'band' value not valid")
         
         epochs_band = epochs.copy().filter(fmin, fmax)
-        if visit_id == "V2" and use_rs_noise:
+        if visit_id in [2, "2", "02"] and use_rs_noise:
             epochs_rs_band = epochs_rs.copy().filter(fmin, fmax)
         
         # Source modelling
@@ -217,13 +220,13 @@ def run_sourcerecon(subject_id, visit_id):
         # elif inv_method == "dspm":
             
         # Compute covariance matrices
-        if visit_id == "V1" or not use_rs_noise:
+        if visit_id in [1, "1", "01"] or not use_rs_noise:
             noise_cov = compute_covariance(epochs_band, 
                                            tmin=baseline_win[0], 
                                            tmax=baseline_win[1], 
                                            method='empirical', 
                                            rank=rank)
-        elif visit_id == "V2":
+        elif visit_id in [2, "2", "02"]:
             noise_cov = compute_covariance(epochs_rs_band, 
                                            method='empirical', 
                                            rank=rank)
@@ -252,7 +255,7 @@ def run_sourcerecon(subject_id, visit_id):
         for condition in range(1,3):
             
             # Pick condition
-            if visit_id == "V1":
+            if visit_id in [1, "1", "01"]:
                 if condition == 1:
                     epochs_cond = epochs_band['Task_relevance == "Relevant non-target"'].copy()
                     cond_name = "relevant non-target"
@@ -261,7 +264,7 @@ def run_sourcerecon(subject_id, visit_id):
                     cond_name = "irrelevant"
                 else:
                     raise ValueError("Condition %s does not exists" % condition)
-            elif visit_id == "V2":
+            elif visit_id in [2, "2", "02"]:
                 if condition == 1:
                     epochs_cond = epochs_band.copy()
                     if use_rs_noise:
@@ -318,13 +321,13 @@ def run_sourcerecon(subject_id, visit_id):
                                               tmax=active_win[1],
                                               method='empirical', 
                                               rank=rank)
-            if visit_id == "V1" or not use_rs_noise:
+            if visit_id in [1, "1", "01"] or not use_rs_noise:
                 noise_cov_cond = compute_covariance(epochs_cond, 
                                                     tmin=baseline_win[0], 
                                                     tmax=baseline_win[1],
                                                     method='empirical', 
                                                     rank=rank)
-            elif visit_id == "V2":
+            elif visit_id in [2, "2", "02"]:
                 noise_cov_cond = compute_covariance(epochs_rs_band, 
                                                     method='empirical', 
                                                     rank=rank)
@@ -336,14 +339,14 @@ def run_sourcerecon(subject_id, visit_id):
                                         method='dSPM', 
                                         pick_ori=None,
                                         verbose=True)
-            if visit_id == "V1" or not use_rs_noise:
+            if visit_id in [1, "1", "01"] or not use_rs_noise:
                 stc_base = mne.minimum_norm.apply_inverse_cov(noise_cov_cond, 
                                                               epochs_cond.info, 
                                                               filters,
                                                               method='dSPM', 
                                                               pick_ori=None,
                                                               verbose=True)
-            elif visit_id == "V2":
+            elif visit_id in [2, "2", "02"]:
                 stc_base = mne.minimum_norm.apply_inverse_cov(noise_cov_cond, 
                                                               epochs_rs_band.info, 
                                                               filters,
@@ -364,7 +367,7 @@ def run_sourcerecon(subject_id, visit_id):
                 extension=None,
                 check=False)
             
-            stc_act.save(bids_path_con)
+            stc_act.save(bids_path_con, overwrite=True)
             
             # Morph to fsaverage  #not needed if morphing the forward solution
             if inv_method in ["lcmv", "dics"]:

@@ -23,10 +23,7 @@ import mne_bids
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import bids_root
-
-
-def run_events(subject_id, visit_id):
+def run_events(subject_id, visit_id, bids_root):
     
     # Prepare PDF report
     pdf = FPDF(orientation="P", unit="mm", format="A4")
@@ -52,7 +49,7 @@ def run_events(subject_id, visit_id):
         if fname.endswith(".json") and "run" in fname:
             
             # Set run
-            run = int(fname[-10])
+            run = fname.split("run-")[1].split("_")[0]
             print("  Run: %s" % run)
 
             # Set task
@@ -71,7 +68,7 @@ def run_events(subject_id, visit_id):
                 subject=subject_id,  
                 datatype='meg',  
                 task=bids_task,
-                run=f"{run:02}",
+                run=run,
                 session=visit_id, 
                 suffix='annot',
                 extension='.fif',
@@ -130,14 +127,14 @@ def run_events(subject_id, visit_id):
             if not op.exists(bids_path_eve):
                 bids_path_eve.fpath.parent.mkdir(exist_ok=True, parents=True)
                             
-            mne.write_events(bids_path_eve.fpath, events)
+            mne.write_events(bids_path_eve.fpath, events, overwrite=True)
             
             #################
             # Read metadata #
             #################
             
             # # Generate metadata table
-            if visit_id == 'V1':
+            if visit_id == '1':
                 eve = events.copy()
                 events = eve[eve[:, 2] < 81].copy()
                 metadata = {}
@@ -173,7 +170,7 @@ def run_events(subject_id, visit_id):
                         # metadata.loc[k]['Miniblock_ID'] = miniblock[0] if miniblock != [] else np.nan
                         k += 1
 
-            elif visit_id == 'V2':
+            elif visit_id == '2':
                 if bids_task == "vg":
                     eve = events.copy()
                     metadata = {}
