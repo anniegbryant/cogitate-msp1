@@ -41,10 +41,11 @@ def artifact_annotation(subject_id, visit_id, bids_root, record="run", has_eeg=F
                              "codes")
     
     # Find whether the recording has EEG data and set the suffix
-    if has_eeg:
-        suffix = "car"
-    else:
-        suffix = 'sss'
+    # if has_eeg:
+    #     suffix = "car"
+    # else:
+    #     suffix = 'sss'
+    suffix = 'sss'
     
     print("Processing subject: %s" % subject_id)
 
@@ -176,10 +177,12 @@ def artifact_annotation(subject_id, visit_id, bids_root, record="run", has_eeg=F
             ###########################
             
             # Contatenate blink and muscle artifact annotations
-            if has_eeg:
-                annot_artifact = annot_blink + annot_muscle
-            else:
-                annot_artifact = annot_muscle
+            # if has_eeg:
+            #     annot_artifact = annot_blink + annot_muscle
+            # else:
+            #     annot_artifact = annot_muscle
+
+            annot_artifact = annot_muscle
             annot_artifact = mne.Annotations(onset = annot_artifact.onset + raw._first_time,
                                               duration = annot_artifact.duration,
                                               description = annot_artifact.description,

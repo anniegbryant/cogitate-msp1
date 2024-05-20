@@ -26,7 +26,7 @@ from mne.minimum_norm import apply_inverse
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import bids_root, sfreq
+from config.config import sfreq
 
 
 parser=argparse.ArgumentParser()
@@ -42,10 +42,10 @@ parser.add_argument('--method',
                     type=str,
                     default='dspm',
                     help='method used for the inverse solution ("lcmv", "dics", "dspm")')
-# parser.add_argument('--bids_root',
-#                     type=str,
-#                     default='/mnt/beegfs/XNAT/COGITATE/MEG/phase_2/processed/bids',
-#                     help='Path to the BIDS root directory')
+parser.add_argument('--bids_root',
+                    type=str,
+                    default='/mnt/beegfs/XNAT/COGITATE/MEG/phase_2/processed/bids',
+                    help='Path to the BIDS root directory')
 opt=parser.parse_args()
 
 
@@ -53,6 +53,7 @@ opt=parser.parse_args()
 subject_id = opt.sub
 visit_id = opt.visit
 inv_method = opt.method  #this variable is used only to set the output filename
+bids_root = opt.bids_root
 
 debug = False
 
@@ -71,7 +72,7 @@ def run_source_dur(subject_id, visit_id):
     rois_deriv_root = op.join(bids_root, "derivatives", "roilabel")
     source_deriv_root = op.join(bids_root, "derivatives", "source_dur_ERF")
     if not op.exists(source_deriv_root):
-        os.makedirs(source_deriv_root)
+        os.makedirs(source_deriv_root, exist_ok=True)
     source_figure_root =  op.join(source_deriv_root,
                                 f"sub-{subject_id}",f"ses-{visit_id}","meg",
                                 "figures")
@@ -79,12 +80,10 @@ def run_source_dur(subject_id, visit_id):
         os.makedirs(source_figure_root)
     
     # Set task
-    if visit_id == "V1":
+    if visit_id in [1, "1", "01"]:
         bids_task = 'dur'
-    elif visit_id == "V2":
+    elif visit_id in [2, "2", "02"]:
         bids_task = 'vg'
-    # elif visit_id == "V2":
-    #     bids_task = 'replay'
     else:
         raise ValueError("Error: could not set the task")
     

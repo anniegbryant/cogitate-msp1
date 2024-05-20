@@ -38,8 +38,8 @@ parser.add_argument('--sub',
                     help='site_id + subject_id (e.g. "SA101")')
 parser.add_argument('--visit',
                     type=str,
-                    default='V1',
-                    help='visit_id (e.g. "V1")')
+                    default='1',
+                    help='visit_id (e.g. "1")')
 parser.add_argument('--task_rel', 
                     type=str,
                     default='irr', 
@@ -55,7 +55,7 @@ opt=parser.parse_args()
 subject_id = opt.sub
 visit_id = opt.visit
 con_method = 'ppc'
-durs = ["1000ms", "1500ms"]
+durs = ["500ms", "1000ms", "1500ms"]
 task_rel = opt.task_rel
 remove_evoked = opt.remove_evoked.lower() == 'true'
 
@@ -76,7 +76,7 @@ elif task_rel == "rel":
     tasks = ["Relevant non-target"]
     t = "_rel"
 else:
-    raise ValueError(f"Error: tasks={tasks} not valid")
+    raise ValueError(f"Error: tasks={task_rel} not valid")
     
 if len(durs) == 3:
     d = "_all-durs"

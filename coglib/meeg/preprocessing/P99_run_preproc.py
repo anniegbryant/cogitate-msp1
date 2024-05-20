@@ -41,12 +41,12 @@ record = opt.record
 bids_root = opt.bids_root
 
 # Find out whwether the participant has EEG data
-if visit_id.upper() == 'V1':
+if visit_id.upper() == '1':
     if subject_id.upper() in ['SA101', 'SA102', 'SA103', 'SA104', 'SB036']:
         has_eeg = False
     else:
         has_eeg = True
-elif visit_id.upper() == 'V2':
+elif visit_id.upper() == '2':
     if subject_id.upper() in ['SA104', 'SA106', 'SA125', 'SB036']:
         has_eeg = False
     else:
@@ -65,13 +65,13 @@ def pre_step1():
                                              visit_id,
                                              bids_root,
                                              record)
-    if has_eeg:
-        print("\n\n\n#######################\nP02_find_bad_eeg\n#######################\n")
-        P02_find_bad_eeg.find_bad_eeg(subject_id, 
-                                      visit_id,
-                                      bids_root,
-                                      record,
-                                      has_eeg)
+    # if has_eeg:
+    #     print("\n\n\n#######################\nP02_find_bad_eeg\n#######################\n")
+    #     P02_find_bad_eeg.find_bad_eeg(subject_id, 
+    #                                   visit_id,
+    #                                   bids_root,
+    #                                   record,
+    #                                   has_eeg)
     print("\n\n\n#######################\nP03_artifact_annotation\n#######################\n")
     P03_artifact_annotation.artifact_annotation(subject_id, 
                                                 visit_id, 

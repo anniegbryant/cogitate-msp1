@@ -149,76 +149,25 @@ def run_sourcerecon(subject_id, visit_id):
     fwd = mne.read_forward_solution(bids_path_fwd.fpath)
     
     # Loop iver frequency bands
-    for fr_band in ['alpha', 'gamma']:
+    for fr_band in ['alpha', 'beta', 'gamma']:
     
         # Filter data
         if fr_band == "alpha":
             fmin = 8
             fmax = 13
-            # bandwidth = 2.
+        elif fr_band == "beta":
+            fmin = 13
+            fmax = 30
         elif fr_band == "gamma":
             fmin = 60
             fmax = 90
-            # bandwidth = 4.
         else:
             raise ValueError("Error: 'band' value not valid")
         
         epochs_band = epochs.copy().filter(fmin, fmax)
         if visit_id in [2, "2", "02"] and use_rs_noise:
             epochs_rs_band = epochs_rs.copy().filter(fmin, fmax)
-        
-        # Source modelling
-        # if inv_method == 'lcmv':
-            
-        #     # Compute covariance matrices
-        #     noise_cov = compute_covariance(epochs_band, 
-        #                                    tmin=baseline_win[0], 
-        #                                    tmax=baseline_win[1], 
-        #                                    method='empirical', 
-        #                                    rank=rank)
-        #     active_cov = compute_covariance(epochs_band, 
-        #                                  tmin=active_win[0], 
-        #                                  tmax=active_win[1],
-        #                                  method='empirical', 
-        #                                  rank=rank)
-        #     common_cov = noise_cov + active_cov
-            
-        #     # Generate LCMV filter
-        #     filters = make_lcmv(epochs_band.info, 
-        #                         fwd, 
-        #                         common_cov,
-        #                         noise_cov=noise_cov, 
-        #                         reg=0,
-        #                         depth=0,
-        #                         pick_ori='max-power',
-        #                         rank=rank,
-        #                         weight_norm=None,
-        #                         reduce_rank=True)
-            
-        # elif inv_method == 'dics':
-            
-        #     # Compute cross-spectral density matrices
-        #     noise_csd = csd_multitaper(epochs_band, 
-        #                                fmin=fmin, fmax=fmax,
-        #                                tmin=baseline_win[0], tmax=baseline_win[1])
-        #     common_csd = csd_multitaper(epochs_band, 
-        #                                 fmin=fmin, fmax=fmax,
-        #                                 tmin=baseline_win[0], tmax=active_win[1])
-            
-        #     # Generate DICS filter
-        #     filters = make_dics(epochs_band.info, 
-        #                         fwd, 
-        #                         common_csd.mean(), 
-        #                         noise_csd=noise_csd.mean(),
-        #                         reg=0,
-        #                         pick_ori='max-power',
-        #                         reduce_rank=True, 
-        #                         real_filter=True,
-        #                         rank=rank,
-        #                         depth=0)
-        
-        # elif inv_method == "dspm":
-            
+                    
         # Compute covariance matrices
         if visit_id in [1, "1", "01"] or not use_rs_noise:
             noise_cov = compute_covariance(epochs_band, 
@@ -249,9 +198,6 @@ def run_sourcerecon(subject_id, visit_id):
             rank=rank,
             use_cps=True)
         
-        # else:
-        #     raise ValueError("Error: 'inv_method' value not valid")
-        
         for condition in range(1,3):
             
             # Pick condition
@@ -275,46 +221,7 @@ def run_sourcerecon(subject_id, visit_id):
                     continue
             
             print(f"\n\n\n### Running on task {cond_name} ###\n\n")
-            
-            # Apply filter
-            # if inv_method == 'lcmv':
-                
-            #     # Compute covariance matrices
-            #     act_cov_cond = compute_covariance(epochs_cond, 
-            #                                      tmin=active_win[0], 
-            #                                      tmax=active_win[1],
-            #                                      method='empirical', 
-            #                                      rank=rank)
-            #     noise_cov_cond = compute_covariance(epochs_cond, 
-            #                                       tmin=baseline_win[0], 
-            #                                       tmax=baseline_win[1],
-            #                                       method='empirical', 
-            #                                       rank=rank)
-                
-            #     # Apply LCMV filter
-            #     stc_act = apply_lcmv_cov(act_cov_cond, filters)
-            #     stc_base = apply_lcmv_cov(noise_cov_cond, filters)
-                
-            # elif inv_method == 'dics':
-                
-            #     # Compute cross-spectral density matrices
-            #     act_csd_cond = csd_multitaper(epochs_cond, 
-            #                              fmin=fmin, fmax=fmax,
-            #                              tmin=active_win[0], 
-            #                              tmax=active_win[1],
-            #                              bandwidth=bandwidth)
-            #     base_csd_cond = csd_multitaper(epochs_cond, 
-            #                                fmin=fmin, fmax=fmax,
-            #                                tmin=baseline_win[0], 
-            #                                tmax=baseline_win[1],
-            #                                bandwidth=bandwidth)
-                
-            #     # Apply DICS filter
-            #     stc_base, freqs = apply_dics_csd(base_csd_cond.mean(), filters)
-            #     stc_act, freqs = apply_dics_csd(act_csd_cond.mean(), filters)
-            
-            # elif inv_method == "dspm":
-                
+                            
             # Compute covariance matrices
             act_cov_cond = compute_covariance(epochs_cond, 
                                               tmin=active_win[0], 
@@ -353,10 +260,7 @@ def run_sourcerecon(subject_id, visit_id):
                                                               method='dSPM', 
                                                               pick_ori=None,
                                                               verbose=True)
-            
-            # else:
-            #     raise ValueError("Error: 'inv_method' value not valid")
-            
+
             # Compute baseline correction
             stc_act /= stc_base
             
@@ -394,7 +298,7 @@ def run_sourcerecon(subject_id, visit_id):
                 extension=None,
                 check=False)
             
-            stc_fs.save(bids_path_sou)
+            stc_fs.save(bids_path_sou, overwrite=True)
 
 
 if __name__ == '__main__':

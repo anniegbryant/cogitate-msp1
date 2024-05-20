@@ -35,6 +35,10 @@ parser.add_argument('--visit',
                     type=str,
                     default='V2',
                     help='visit_id (e.g. "V1")')
+parser.add_argument('--participants_file_list',
+                    type=str,
+                    default='participants_MEG_Batch1_included.txt',
+                    help='visit_id (e.g. "V1")')
 parser.add_argument('--bids_root',
                     type=str,
                     default='/data/MEG_data/BIDS',
@@ -45,22 +49,16 @@ opt=parser.parse_args()
 inv_method = opt.method
 fr_band = opt.band
 visit_id = opt.visit
+participants_file_list = opt.participants_file_list
 bids_root = opt.bids_root
 
 debug = False
 
 # Set participant list
-phase = 3
-
-if debug:
-    sub_list = ["SA124", "SA126"]
-else:
-    # Read the .txt file
-    f = open(op.join(bids_root,
-                  f'participants_MEG_phase{phase}_included.txt'), 'r').read()
-    # Split text into list of elemetnts
-    sub_list = f.split("\n")
-
+# Read the .txt file
+f = open(op.join(bids_root, participants_file_list), 'r').read()
+# Split text into list of elemetnts
+sub_list = f.split("\n")
 
 def source_loc_ga():
     # Set directory paths
@@ -70,8 +68,7 @@ def source_loc_ga():
     stfr_deriv_root = op.join(bids_root, "derivatives", "source_loc")
     if not op.exists(stfr_deriv_root):
         os.makedirs(stfr_deriv_root)
-    stfr_figure_root =  op.join(stfr_deriv_root,
-                                f"sub-groupphase{phase}",f"ses-{visit_id}","meg",
+    stfr_figure_root =  op.join(stfr_deriv_root, f"ses-{visit_id}","meg",
                                 "figures")
     if not op.exists(stfr_figure_root):
         os.makedirs(stfr_figure_root)
@@ -100,79 +97,80 @@ def source_loc_ga():
     src_fs = mne.read_source_spaces(fname_fs_src)
     
     # Loop over frequency bands
-    for fr_band in ['alpha', 'gamma']:
-        # Loop over conditions
-        stcs = {}
-        for condition in range(1,3):
-    
-            # Pick condition
-            if condition == 1:
-                cond_name = "relevant non-target"
-            elif condition == 2:
-                cond_name = "irrelevant"
-            else:
-                raise ValueError("Condition %s does not exists" % condition)
+    # Loop over conditions
+    stcs = {}
+    for condition in range(1,3):
+
+        # Pick condition
+        if condition == 1:
+            cond_name = "relevant non-target"
+        elif condition == 2:
+            cond_name = "irrelevant"
+        else:
+            raise ValueError("Condition %s does not exists" % condition)
+        
+        print(f"\Task {cond_name}")
+        
+        # Load data
+        stcs_temp = []
+        for sub_short in sub_list:
+
+            subject_ID = "sub-"+sub_short
+            print("participant:", subject_ID)
             
-            print(f"\Task {cond_name}")
+            # Set path
+            bids_path_sou = mne_bids.BIDSPath(
+                root=stfr_deriv_root,
+                subject=sub_short,  
+                datatype='meg',  
+                task=bids_task,
+                session=visit_id, 
+                suffix=f"stfr_beam-{inv_method}_band-{fr_band}_c-{cond_name}-{fname_end}",
+                extension=".stc",
+                check=False)
             
-            # Load data
-            stcs_temp = []
-            for sub in sub_list:
-                print("participant:", sub)
-                
-                # Set path
-                bids_path_sou = mne_bids.BIDSPath(
-                    root=stfr_deriv_root,
-                    subject=sub,  
-                    datatype='meg',  
+            # Load stc data
+            stc = mne.read_source_estimate(bids_path_sou)
+            
+            # Read forward solution
+            bids_path_fwd = bids_path_sou.copy().update(
+                    root=fwd_deriv_root,
                     task=bids_task,
-                    session=visit_id, 
-                    suffix=f"stfr_beam-{inv_method}_band-{fr_band}_c-{cond_name}-{fname_end}",
-                    extension=".stc",
+                    suffix="surface_fwd",
+                    extension='.fif',
                     check=False)
-                
-                # Load stc data
-                stc = mne.read_source_estimate(bids_path_sou)
-                
-                # Read forward solution
-                bids_path_fwd = bids_path_sou.copy().update(
-                        root=fwd_deriv_root,
-                        task=None,
-                        suffix="surface_fwd",
-                        extension='.fif',
-                        check=False)
-                
-                fwd = mne.read_forward_solution(bids_path_fwd.fpath)
-                
-                # Morph to fsaverage
-                if sub not in ['SA102', 'SA104', 'SA110', 'SA111', 'SA152']:
-                    morph = mne.compute_source_morph(
-                        fwd['src'], 
-                        subject_from="sub-"+sub, 
-                        subject_to='fsaverage', 
-                        src_to=src_fs, 
-                        subjects_dir=fs_deriv_root,
-                        verbose=True)
-                
-                    stc = morph.apply(stc)
-                
-                # Append to temp stc list
-                stcs_temp.append(stc)
             
-            # Appenmd to full stcs list
-            stcs[cond_name] = stcs_temp
+            fwd = mne.read_forward_solution(bids_path_fwd.fpath)
             
-            del stc, stcs_temp
+            # Morph to fsaverage
+            if sub_short not in ['SA102', 'SA104', 'SA110', 'SA111', 'SA152']:
+                morph = mne.compute_source_morph(
+                    fwd['src'], 
+                    subject_from=subject_ID, 
+                    subject_to='fsaverage', 
+                    src_to=src_fs, 
+                    subjects_dir=fs_deriv_root,
+                    verbose=True)
             
-            # Average stcs across participants
-            stcs_data = [stc.data for stc in stcs[cond_name]]
-            stc_ga = stcs[cond_name][0]
-            stc_ga.data = np.mean(stcs_data, axis=0)
+                stc = morph.apply(stc)
             
-            # Save stc grandaverage
-            bids_path_sou = bids_path_sou.update(
-                subject=f"groupphase{phase}")
-            stc_ga.save(bids_path_sou)
+            # Append to temp stc list
+            stcs_temp.append(stc)
+        
+        # Appenmd to full stcs list
+        stcs[cond_name] = stcs_temp
+        
+        del stc, stcs_temp
+        
+        # Average stcs across participants
+        stcs_data = [stc.data for stc in stcs[cond_name]]
+        stc_ga = stcs[cond_name][0]
+        stc_ga.data = np.mean(stcs_data, axis=0)
+        
+        # Save stc grandaverage
+        bids_path_sou = bids_path_sou.update(
+            subject=f"group")
+        stc_ga.save(bids_path_sou)
 
 
 def plot_source_loc_ga(stc_path, desc=None, lims=None, hemi="lh", surface='pial',

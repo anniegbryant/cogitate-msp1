@@ -24,8 +24,6 @@ import mne_bids
 import sys
 sys.path.insert(1, op.dirname(op.dirname(os.path.abspath(__file__))))
 
-from config.config import bids_root
-
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--sub',
@@ -34,16 +32,16 @@ parser.add_argument('--sub',
                     help='site_id + subject_id (e.g. "SA101")')
 parser.add_argument('--visit',
                     type=str,
-                    default='V1',
-                    help='visit_id (e.g. "V1")')
+                    default='1',
+                    help='visit_id (e.g. "1")')
 parser.add_argument('--method',
                     type=str,
                     default='dspm',
                     help='method used for the inverse solution ("lcmv", "dics", "dspm")')
-# parser.add_argument('--bids_root',
-#                     type=str,
-#                     default='/mnt/beegfs/XNAT/COGITATE/MEG/phase_2/processed/bids',
-#                     help='Path to the BIDS root directory')
+parser.add_argument('--bids_root',
+                    type=str,
+                    default='/mnt/beegfs/XNAT/COGITATE/MEG/phase_2/processed/bids',
+                    help='Path to the BIDS root directory')
 opt=parser.parse_args()
 
 
@@ -51,6 +49,7 @@ opt=parser.parse_args()
 subject_id = opt.sub
 visit_id = opt.visit
 inv_method = opt.method  #this variable is used only to set the output filename
+bids_root = opt.bids_root
 
 debug = False
 

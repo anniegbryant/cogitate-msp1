@@ -58,7 +58,7 @@ def find_bad_eeg(subject_id, visit_id, bids_root, record="run", has_eeg=False):
             
             # Set run
             if "run" in fname:
-                run = f"{int(fname[-10]):02}"
+                run = fname.split("run-")[1].split("_")[0]
             elif "rest" in fname:
                 run = None
             print("  Run: %s" % run)

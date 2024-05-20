@@ -135,7 +135,12 @@ def apply_ica(subject_id, visit_id, bids_root, record="run", has_eeg=False):
             if has_eeg:
                 chs = ['MEG0311', 'MEG0121', 'MEG1211', 'MEG1411', 'EEG001','EEG002', 'EOG001','EOG002']
             else:
-                chs = ['MEG0311', 'MEG0121', 'MEG1211', 'MEG1411', 'EOG001','EOG002']
+                chs = ['MEG0311', 'MEG0121', 'MEG1211', 'MEG1411', 'EOG001','EOG002'] 
+
+            # Filter chs
+            chs = [ch for ch in chs if ch in raw.ch_names]
+            print(chs)
+            
             chan_idxs = [raw.ch_names.index(ch) for ch in chs]
             fig1 = raw.plot(order=chan_idxs,
                            duration=20,
