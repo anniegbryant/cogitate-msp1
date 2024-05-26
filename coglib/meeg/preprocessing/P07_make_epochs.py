@@ -174,7 +174,7 @@ def run_epochs(subject_id, visit_id, task, bids_root, has_eeg=False):
                         events, 
                         events_id,
                         tmin=-0.5, 
-                        tmax=0.5, # Using the mne Epochs defaults here?
+                        tmax=2, # Using the mne Epochs defaults here?
                         baseline=None,
                         proj=True,
                         picks=picks,

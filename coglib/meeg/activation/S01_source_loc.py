@@ -120,7 +120,7 @@ def run_sourcerecon(subject_id, visit_id):
     
     # Baseline correction
     baseline_win = (-0.5, 0.)
-    active_win = (.0, .5)
+    active_win = (.0, 1.5)
     if visit_id in [1, "1", "01"] or not use_rs_noise:
         epochs.apply_baseline(baseline=baseline_win)
     
