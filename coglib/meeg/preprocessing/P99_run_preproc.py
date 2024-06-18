@@ -40,19 +40,8 @@ visit_id = opt.visit
 record = opt.record
 bids_root = opt.bids_root
 
-# Find out whwether the participant has EEG data
-if visit_id.upper() == '1':
-    if subject_id.upper() in ['SA101', 'SA102', 'SA103', 'SA104', 'SB036']:
-        has_eeg = False
-    else:
-        has_eeg = True
-elif visit_id.upper() == '2':
-    if subject_id.upper() in ['SA104', 'SA106', 'SA125', 'SB036']:
-        has_eeg = False
-    else:
-        has_eeg = True
-else:
-    has_eeg = False
+# None of the subjects here have eeg
+has_eeg = False
 
 
 # =============================================================================
@@ -60,11 +49,11 @@ else:
 # =============================================================================
 
 def pre_step1():
-    print("\n\n\n#######################\nP01_maxwell_filtering\n#######################\n")
-    P01_maxwell_filtering.run_maxwell_filter(subject_id, 
-                                             visit_id,
-                                             bids_root,
-                                             record)
+    # print("\n\n\n#######################\nP01_maxwell_filtering\n#######################\n")
+    # P01_maxwell_filtering.run_maxwell_filter(subject_id, 
+    #                                          visit_id,
+    #                                          bids_root,
+    #                                          record)
     # if has_eeg:
     #     print("\n\n\n#######################\nP02_find_bad_eeg\n#######################\n")
     #     P02_find_bad_eeg.find_bad_eeg(subject_id, 
@@ -72,19 +61,19 @@ def pre_step1():
     #                                   bids_root,
     #                                   record,
     #                                   has_eeg)
-    print("\n\n\n#######################\nP03_artifact_annotation\n#######################\n")
-    P03_artifact_annotation.artifact_annotation(subject_id, 
-                                                visit_id, 
-                                                bids_root,
-                                                record, 
-                                                has_eeg, 
-                                                # threshold_muscle,
-                                                )
+    # print("\n\n\n#######################\nP03_artifact_annotation\n#######################\n")
+    # P03_artifact_annotation.artifact_annotation(subject_id, 
+    #                                             visit_id, 
+    #                                             bids_root,
+    #                                             record, 
+    #                                             has_eeg, 
+    #                                             # threshold_muscle,
+    #                                             )
     if record == "run":
-        print("\n\n\n#######################\nP04_extract_events\n#######################\n")
-        P04_extract_events.run_events(subject_id, 
-                                      visit_id,
-                                      bids_root)
+        # print("\n\n\n#######################\nP04_extract_events\n#######################\n")
+        # P04_extract_events.run_events(subject_id, 
+        #                               visit_id,
+        #                               bids_root)
         print("\n\n\n#######################\nP05_run_ica\n#######################\n")
         P05_run_ica.run_ica(subject_id, 
                             visit_id, 
