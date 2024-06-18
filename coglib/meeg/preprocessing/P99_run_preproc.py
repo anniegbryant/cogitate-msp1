@@ -81,12 +81,12 @@ def pre_step1():
                             has_eeg)
 
 def pre_step2():
-    print("\n\n\n#######################\nP06_apply_ica\n#######################\n")
-    P06_apply_ica.apply_ica(subject_id, 
-                            visit_id, 
-                            bids_root,
-                            record, 
-                            has_eeg)
+    # print("\n\n\n#######################\nP06_apply_ica\n#######################\n")
+    # P06_apply_ica.apply_ica(subject_id, 
+    #                         visit_id, 
+    #                         bids_root,
+    #                         record, 
+    #                         has_eeg)
     
     print("\n\n\n#######################\nP07_make_epochs\n#######################\n")
     if record == "rest":
