@@ -43,17 +43,16 @@ bids_root = opt.bids_root
 # None of the subjects here have eeg
 has_eeg = False
 
-
 # =============================================================================
 # DEFINE PREPROCESSING STEPS
 # =============================================================================
 
 def pre_step1():
-    # print("\n\n\n#######################\nP01_maxwell_filtering\n#######################\n")
-    # P01_maxwell_filtering.run_maxwell_filter(subject_id, 
-    #                                          visit_id,
-    #                                          bids_root,
-    #                                          record)
+    print("\n\n\n#######################\nP01_maxwell_filtering\n#######################\n")
+    P01_maxwell_filtering.run_maxwell_filter(subject_id, 
+                                             visit_id,
+                                             bids_root,
+                                             record)
     # if has_eeg:
     #     print("\n\n\n#######################\nP02_find_bad_eeg\n#######################\n")
     #     P02_find_bad_eeg.find_bad_eeg(subject_id, 
@@ -61,19 +60,19 @@ def pre_step1():
     #                                   bids_root,
     #                                   record,
     #                                   has_eeg)
-    # print("\n\n\n#######################\nP03_artifact_annotation\n#######################\n")
-    # P03_artifact_annotation.artifact_annotation(subject_id, 
-    #                                             visit_id, 
-    #                                             bids_root,
-    #                                             record, 
-    #                                             has_eeg, 
-    #                                             # threshold_muscle,
-    #                                             )
+    print("\n\n\n#######################\nP03_artifact_annotation\n#######################\n")
+    P03_artifact_annotation.artifact_annotation(subject_id, 
+                                                visit_id, 
+                                                bids_root,
+                                                record, 
+                                                has_eeg, 
+                                                # threshold_muscle,
+                                                )
     if record == "run":
-        # print("\n\n\n#######################\nP04_extract_events\n#######################\n")
-        # P04_extract_events.run_events(subject_id, 
-        #                               visit_id,
-        #                               bids_root)
+        print("\n\n\n#######################\nP04_extract_events\n#######################\n")
+        P04_extract_events.run_events(subject_id, 
+                                      visit_id,
+                                      bids_root)
         print("\n\n\n#######################\nP05_run_ica\n#######################\n")
         P05_run_ica.run_ica(subject_id, 
                             visit_id, 
@@ -81,12 +80,12 @@ def pre_step1():
                             has_eeg)
 
 def pre_step2():
-    # print("\n\n\n#######################\nP06_apply_ica\n#######################\n")
-    # P06_apply_ica.apply_ica(subject_id, 
-    #                         visit_id, 
-    #                         bids_root,
-    #                         record, 
-    #                         has_eeg)
+    print("\n\n\n#######################\nP06_apply_ica\n#######################\n")
+    P06_apply_ica.apply_ica(subject_id, 
+                            visit_id, 
+                            bids_root,
+                            record, 
+                            has_eeg)
     
     print("\n\n\n#######################\nP07_make_epochs\n#######################\n")
     if record == "rest":
