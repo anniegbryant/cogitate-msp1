@@ -180,6 +180,7 @@ def run_epochs(subject_id, visit_id, task, bids_root, has_eeg=False):
                         picks=picks,
                         detrend=1,
                         reject=None,
+                        on_missing='warn', # Only print warning if an epoch is missing
                         reject_by_annotation=True, #reject muscle artifacts
                         verbose=True)
     del raw

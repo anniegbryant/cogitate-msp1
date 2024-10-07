@@ -120,15 +120,6 @@ def run_events(subject_id, visit_id, bids_root):
             pdf.cell(0, 10, 'Events', 'B', ln=1)
             pdf.image(fname_fig, 0, 45, pdf.epw)
             
-            # Save event array
-            bids_path_eve = bids_path_annot.copy().update(
-                suffix="eve",
-                check=False)
-            if not op.exists(bids_path_eve):
-                bids_path_eve.fpath.parent.mkdir(exist_ok=True, parents=True)
-                            
-            mne.write_events(bids_path_eve.fpath, events, overwrite=True)
-            
             #################
             # Read metadata #
             #################
@@ -150,25 +141,33 @@ def run_events(subject_id, visit_id, bids_root):
                 k = 0
                 for i in range(eve.shape[0]):
                     if eve[i, 2] < 81:
-                    ##find the end of each trial (trigger 97)
-                        t = [t for t, j in enumerate(eve[i:i + 9, 2]) if j == 97][0]
-                        metadata.loc[k]['Stim_trigger'] = eve[i,2]
-                        metadata.loc[k]['Category'] = Category[int((eve[i,2]-1)//20)]
-                        metadata.loc[k]['Orientation'] = Orientation[[j-100 for j in eve[i:i+t,2]
-                                                                      if j in [101,102,103]][0]-1]
-                        metadata.loc[k]['Duration'] = Duration[[j-150 for j in eve[i:i+t,2]
-                                                                if j in [151,152,153]][0]-1]
-                        metadata.loc[k]['Task_relevance'] = Relevance[[j-200 for j in eve[i:i+t,2]
-                                                                       if j in [201,202,203]][0]-1]
-                        metadata.loc[k]['Trial_ID'] = [j for j in eve[i:i+t,2]
-                                                       if (j>110) and (j<149)][0]
-                        metadata.loc[k]['Response'] = True if any(eve[i:i+t,2] == 255) else False
-                        if metadata.loc[k]['Response'] == True:
-                            r = [r for r,j in enumerate(eve[i:i+t,2]) if j == 255][0]
-                            metadata.loc[k]['Response_time(s)'] = (eve[i+r,0] - eve[i,0])
-                        # miniblock = [j for j in eve[i:i+t,2] if (j>160) and (j<201)]
-                        # metadata.loc[k]['Miniblock_ID'] = miniblock[0] if miniblock != [] else np.nan
-                        k += 1
+                        try:
+                        ##find the end of each trial (trigger 97)
+                            t = [t for t, j in enumerate(eve[i:i + 9, 2]) if j == 97][0]
+                            metadata.loc[k]['Stim_trigger'] = eve[i,2]
+                            metadata.loc[k]['Category'] = Category[int((eve[i,2]-1)//20)]
+                            metadata.loc[k]['Orientation'] = Orientation[[j-100 for j in eve[i:i+t,2]
+                                                                        if j in [101,102,103]][0]-1]
+                            metadata.loc[k]['Duration'] = Duration[[j-150 for j in eve[i:i+t,2]
+                                                                    if j in [151,152,153]][0]-1]
+                            metadata.loc[k]['Task_relevance'] = Relevance[[j-200 for j in eve[i:i+t,2]
+                                                                        if j in [201,202,203]][0]-1]
+                            metadata.loc[k]['Trial_ID'] = [j for j in eve[i:i+t,2]
+                                                        if (j>110) and (j<149)][0]
+                            metadata.loc[k]['Response'] = True if any(eve[i:i+t,2] == 255) else False
+                            if metadata.loc[k]['Response'] == True:
+                                r = [r for r,j in enumerate(eve[i:i+t,2]) if j == 255][0]
+                                metadata.loc[k]['Response_time(s)'] = (eve[i+r,0] - eve[i,0])
+                            k += 1
+                        except:
+                            print('Error in trial %s; skipping' % i)
+                            
+                # Find indices where 'Category' is NaN in metadata, drop those row(s) in both metadata and events
+                nan_indices = metadata[metadata['Category'].isnull()].index
+                metadata = metadata.drop(nan_indices) 
+
+                # Drop the index from the events column too
+                events = np.delete(events, nan_indices, axis=0)
 
             elif visit_id == '2':
                 if bids_task == "vg":
@@ -214,8 +213,6 @@ def run_events(subject_id, visit_id, bids_root):
                                                      'Response_time'])
                     types0 = ['Non-Target', 'Target']
                     type1 = ['Face', 'Object', 'Black']
-                    # type1 = ['Face Target', 'Object Non-Target', 'Blank during Face Target',
-                    #          'Object Target', 'Face Non-Target', 'Blank during Object Target']
                     location = ['Upper Left', 'Upper Right', 'Lower Right', 'Lower Left']
                     response = ['Seen', 'Unseen']
                     k = 0
@@ -249,6 +246,15 @@ def run_events(subject_id, visit_id, bids_root):
                                     metadata.loc[k]['Response'] = response[1]
                             k += 1
             
+            # Save event array
+            bids_path_eve = bids_path_annot.copy().update(
+                suffix="eve",
+                check=False)
+            if not op.exists(bids_path_eve):
+                bids_path_eve.fpath.parent.mkdir(exist_ok=True, parents=True)
+                            
+            mne.write_events(bids_path_eve.fpath, events, overwrite=True)
+
             # Save metadata table as csv
             bids_path_meta = bids_path_annot.copy().update(
                 suffix="meta",

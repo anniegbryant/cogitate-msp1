@@ -83,7 +83,7 @@ def run_maxwell_filter(subject_id, visit_id, bids_root, record="run"):
                 raise ValueError("Error: could not find the task for %s" % fname)
             
             # Set split
-            if len([f for f in os.listdir(data_path) if op.splitext(fname)[0][:-3] in f and f.endswith(".fif")]) > 1:
+            if op.isfile(f"{data_path}/sub-{subject_id}_ses-{visit_id}_task-{bids_task}_run-{run}_split-01_meg.fif"):
                 split = 1
             else:
                 split = None
